@@ -6,15 +6,12 @@
     <meta name="theme-color" content="#005eb8" />
     <title>BSSM Portal | Hospital Santa Marta</title>
     
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet" />
 
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -38,7 +35,6 @@
             boxShadow: {
               'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
               'card': '0 10px 40px -10px rgba(0,0,0,0.08)',
-              // Sombra base suave para a logo
               'logo-glow': '0 0 25px -5px rgba(0, 94, 184, 0.15), 0 10px 25px -5px rgba(0, 94, 184, 0.15)' 
             },
             animation: {
@@ -47,7 +43,7 @@
               'scale-in': 'scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
               'pulse-soft': 'pulseSoft 3s infinite',
               'blob': 'blob 7s infinite',
-              'pulse-glow': 'pulseGlow 4s ease-in-out infinite', // Mais lento (4s) e com curva suave
+              'pulse-glow': 'pulseGlow 4s ease-in-out infinite',
             },
             keyframes: {
               fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
@@ -60,7 +56,6 @@
                 "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
                 "100%": { transform: "translate(0px, 0px) scale(1)" }
               },
-              // Keyframe AJUSTADO: Opacidade muito reduzida para sutileza
               pulseGlow: {
                 "0%, 100%": { boxShadow: '0 0 20px -5px rgba(0, 94, 184, 0.1), 0 10px 15px -5px rgba(0, 94, 184, 0.1)' },
                 "50%": { boxShadow: '0 0 35px -5px rgba(0, 94, 184, 0.25), 0 20px 30px -10px rgba(0, 94, 184, 0.2)' }
@@ -71,20 +66,10 @@
       }
     </script>
 
-    <!-- React & Libraries Imports -->
-    <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@18.2.0",
-    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-    "lucide-react": "https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs"
-  }
-}
-</script>
-    
-    <!-- Babel for JSX/TS Compilation in Browser -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     
     <style>
       /* Custom Scrollbar */
@@ -93,7 +78,6 @@
       ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
       ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
       
-      /* Glassmorphism Utilities */
       .glass {
         background: rgba(255, 255, 255, 0.75);
         backdrop-filter: blur(16px);
@@ -101,7 +85,6 @@
         border: 1px solid rgba(255, 255, 255, 0.5);
       }
       
-      /* ESTILOS ESPECÍFICOS DA NOVA CARTEIRINHA */
       .doc-card {
           background: #ffffff;
           border-radius: 16px;
@@ -120,7 +103,6 @@
           position: relative;
           overflow: hidden;
       }
-      /* Pattern do Header */
       .doc-header::after {
           content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
           background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
@@ -142,22 +124,70 @@
       }
       .photo-frame:hover .photo-overlay { opacity: 1; }
 
-      /* Smooth rendering */
       body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
     </style>
+    <script type="module">
+      // Importando os módulos essenciais do Firebase v10.8.1
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+      import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+      // Suas credenciais exclusivas
+      const firebaseConfig = {
+        apiKey: "AIzaSyAk3bwFb7ROhsR5Cu3YXdo3e_n6KHI9xmA",
+        authDomain: "bssm---app.firebaseapp.com",
+        databaseURL: "https://bssm---app-default-rtdb.firebaseio.com",
+        projectId: "bssm---app",
+        storageBucket: "bssm---app.firebasestorage.app",
+        messagingSenderId: "875637451285",
+        appId: "1:875637451285:web:132da6ecd7f3f7343c7c1c"
+      };
+
+      // Inicializa o app e o banco de dados
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      // Exportando para o escopo global para o React/Babel poder usar
+      window.firebaseDB = db;
+      window.firebaseSetDoc = setDoc;
+      window.firebaseGetDoc = getDoc;
+      window.firebaseDoc = doc;
+      
+      console.log("🔥 Firebase Bridge inicializado com sucesso!");
+    </script>
   </head>
   <body class="bg-hsm-surface text-slate-800 antialiased overflow-x-hidden selection:bg-hsm-blue selection:text-white">
     <div id="root"></div>
 
-    <script type="text/babel" data-presets="react,typescript" data-type="module">
-      import React, { useState, useEffect, useRef, useMemo } from 'react';
-      import ReactDOM from 'react-dom/client';
-      import { 
-        LogOut, User as UserIcon, UploadCloud, Trash2, Search, 
-        FileSpreadsheet, Lock, UserCheck, ArrowRight, AlertCircle, RefreshCw,
-        ShieldCheck, LayoutDashboard, FileText, Eye, XCircle
-      } from 'lucide-react';
-      import * as XLSX from 'xlsx';
+    <script type="text/babel" data-presets="react">
+      // Acessando globais
+      const { useState, useEffect, useRef, useMemo } = React;
+      // AS LINHAS QUE CAUSAVAM O ERRO FORAM REMOVIDAS DAQUI
+      // Agora usamos window.XLSX e window.ReactDOM diretamente
+
+      // --- ÍCONES (ADAPTADOS DE LUCIDE PARA FONTAWESOME) ---
+      
+      const IconBase = ({ icon, size = 20, className = "", strokeWidth }) => (
+        <i className={`fa-solid ${icon} ${className}`} style={{ fontSize: size }}></i>
+      );
+
+      const LogOut = (p) => <IconBase icon="fa-right-from-bracket" {...p} />;
+      const User = (p) => <IconBase icon="fa-user" {...p} />; 
+      const UserIcon = User;
+      const UploadCloud = (p) => <IconBase icon="fa-cloud-arrow-up" {...p} />;
+      const Trash2 = (p) => <IconBase icon="fa-trash-can" {...p} />;
+      const Search = (p) => <IconBase icon="fa-magnifying-glass" {...p} />;
+      const FileSpreadsheet = (p) => <IconBase icon="fa-file-excel" {...p} />;
+      const Lock = (p) => <IconBase icon="fa-lock" {...p} />;
+      const UserCheck = (p) => <IconBase icon="fa-user-check" {...p} />;
+      const ArrowRight = (p) => <IconBase icon="fa-arrow-right" {...p} />;
+      const AlertCircle = (p) => <IconBase icon="fa-circle-exclamation" {...p} />;
+      const RefreshCw = (p) => <IconBase icon="fa-rotate" {...p} />;
+      const ShieldCheck = (p) => <IconBase icon="fa-shield-halved" {...p} />;
+      const LayoutDashboard = (p) => <IconBase icon="fa-table-columns" {...p} />;
+      const FileText = (p) => <IconBase icon="fa-file-lines" {...p} />;
+      const Eye = (p) => <IconBase icon="fa-eye" {...p} />;
+      const XCircle = (p) => <IconBase icon="fa-circle-xmark" {...p} />;
+
 
       // --- TYPES & CONSTANTS ---
       const UserRole = {
@@ -253,10 +283,10 @@
           reader.onload = (e) => {
             try {
               const data = new Uint8Array(e.target.result);
-              const workbook = XLSX.read(data, { type: 'array' });
+              const workbook = window.XLSX.read(data, { type: 'array' }); // Usando window.XLSX
               const firstSheetName = workbook.SheetNames[0];
               const worksheet = workbook.Sheets[firstSheetName];
-              const json = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+              const json = window.XLSX.utils.sheet_to_json(worksheet, { defval: '' }); // Usando window.XLSX
 
               const normalizedData = json.map((row) => {
                 const getVal = (keys) => {
@@ -328,7 +358,7 @@
                     className="group relative w-11 h-11 rounded-2xl flex items-center justify-center bg-slate-50 text-slate-500 border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all duration-300 shadow-sm active:scale-95"
                     title="Sair"
                   >
-                    <LogOut size={18} strokeWidth={2.5} className="group-hover:-translate-x-0.5 transition-transform" />
+                    <LogOut size={18} className="group-hover:-translate-x-0.5 transition-transform" />
                   </button>
                 </div>
               </div>
@@ -402,7 +432,7 @@
                     <img src="https://raw.githubusercontent.com/instrutormedeiros/IndicadoresBrigadaHSM/refs/heads/main/assets/LOGO%20HSM.png" className="h-8 brightness-0 invert opacity-90" alt="HSM Logo" />
                     <div className="text-right z-10">
                         <h3 className="text-[9px] font-bold uppercase tracking-widest opacity-80 text-white">Identidade Digital</h3>
-                        <p className="text-xs font-bold text-white">BSSM BENEFÍCIO</p>
+                        <p className="text-xs font-bold text-white">BSSM</p>
                     </div>
                 </div>
 
