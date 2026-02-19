@@ -205,8 +205,7 @@
       // --- SERVICES ---
       const KEYS = {
         AUTH: 'bssm_auth_v7',
-        DB: 'bssm_db_v7',
-        PHOTOS: 'bssm_photos_v1'
+        PHOTOS: 'bssm_photos_v1' // Mantemos fotos e auth local por enquanto para não pesar o banco
       };
 
       const storageService = {
@@ -219,20 +218,38 @@
         setSession: (user) => localStorage.setItem(KEYS.AUTH, JSON.stringify(user)),
         clearSession: () => localStorage.removeItem(KEYS.AUTH),
         
-        getData: () => {
+        // --- NOVA INTEGRAÇÃO FIREBASE (ASSÍNCRONA) ---
+        getData: async () => {
           try {
-            const db = localStorage.getItem(KEYS.DB);
-            return db ? JSON.parse(db) : null;
-          } catch { return null; }
+            if(!window.firebaseDB) return null;
+            const docRef = window.firebaseDoc(window.firebaseDB, "portal", "baseDeDados");
+            const docSnap = await window.firebaseGetDoc(docRef);
+            return docSnap.exists() ? docSnap.data() : null;
+          } catch (e) { 
+            console.error("Erro ao ler Firebase:", e); 
+            return null; 
+          }
         },
-        setData: (data) => {
-          const payload = {
-            data,
-            date: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-          };
-          localStorage.setItem(KEYS.DB, JSON.stringify(payload));
+        setData: async (data) => {
+          try {
+            if(!window.firebaseDB) return null;
+            const payload = {
+              data,
+              date: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+            };
+            const docRef = window.firebaseDoc(window.firebaseDB, "portal", "baseDeDados");
+            await window.firebaseSetDoc(docRef, payload);
+            return payload.date; // Retorna a data para atualizar o UI
+          } catch (e) { console.error("Erro ao salvar no Firebase:", e); return null; }
         },
-        clearData: () => localStorage.removeItem(KEYS.DB),
+        clearData: async () => {
+          try {
+            if(!window.firebaseDB) return;
+            const docRef = window.firebaseDoc(window.firebaseDB, "portal", "baseDeDados");
+            await window.firebaseSetDoc(docRef, { data: [], date: '--' });
+          } catch (e) { console.error("Erro ao limpar Firebase:", e); }
+        },
+        // ----------------------------------------------
 
         getPhoto: (id) => {
           try {
@@ -246,10 +263,7 @@
             photos[id] = base64;
             localStorage.setItem(KEYS.PHOTOS, JSON.stringify(photos));
             return true;
-          } catch (e) {
-            console.error("Storage full", e);
-            return false;
-          }
+          } catch (e) { return false; }
         }
       };
 
@@ -556,9 +570,9 @@
           setIsUploading(true);
           try {
             const parsed = await parseExcelFile(file);
-            storageService.setData(parsed);
-            onDataUpdate(parsed);
-            alert(`${parsed.length} registros importados com sucesso!`);
+            const novaData = await storageService.setData(parsed); // Agora salva online
+            onDataUpdate(parsed, novaData); // Sincroniza a tela
+            alert(`${parsed.length} registros sincronizados na nuvem com sucesso!`);
           } catch (err) { alert("Erro ao processar o arquivo. Verifique o formato."); }
           finally { setIsUploading(false); e.target.value = ''; }
         };
@@ -840,8 +854,16 @@
         useEffect(() => {
           const sess = storageService.getSession();
           if (sess) setUser(sess);
-          const db = storageService.getData();
-          if (db) { setDbData(db.data); setLastUpdated(db.date); }
+          
+          // Busca os dados na nuvem assim que o app carrega
+          const loadDB = async () => {
+            const db = await storageService.getData();
+            if (db && db.data) { 
+              setDbData(db.data); 
+              setLastUpdated(db.date); 
+            }
+          };
+          loadDB();
         }, []);
 
         const handleLogin = (newUser) => {
@@ -854,7 +876,13 @@
         };
 
         const handleLogout = () => { setUser(null); storageService.clearSession(); };
-        const handleClear = () => { setDbData([]); setLastUpdated('--'); storageService.clearData(); };
+        
+        // Limpeza agora também deleta do Firebase
+        const handleClear = async () => { 
+          await storageService.clearData();
+          setDbData([]); 
+          setLastUpdated('--'); 
+        };
         
         if (!user) return <Login onLogin={handleLogin} />;
 
@@ -867,7 +895,10 @@
                   user={user} 
                   data={dbData} 
                   lastUpdated={lastUpdated} 
-                  onDataUpdate={(d) => { setDbData(d); setLastUpdated(new Date().toLocaleDateString('pt-BR')); }} 
+                  onDataUpdate={(d, novaData) => { 
+                    setDbData(d); 
+                    if(novaData) setLastUpdated(novaData); 
+                  }} 
                   onClearData={handleClear} 
                 />
               ) : (
@@ -911,3 +942,4 @@
     </script>
   </body>
 </html>
+
